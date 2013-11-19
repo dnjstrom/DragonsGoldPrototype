@@ -7,7 +7,7 @@ html, body {
   width: 100%;
 }
 
-#game {
+#game, #container {
   position:absolute;
 
   top:50%;

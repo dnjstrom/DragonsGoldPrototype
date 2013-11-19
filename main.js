@@ -1,5 +1,5 @@
 // All pages in the game
-var pages = [];
+var pages = {};
 
 // A clickable square area
 function Square (x, y, dx, dy) {
@@ -50,11 +50,19 @@ function Square (x, y, dx, dy) {
 	this.click = function (handler) {
 		$box.click(handler);
 	}
+
+	this.enter = function (handler) {
+		$box.mouseenter(handler);
+	}
+
+	this.leave = function (handler) {
+		$box.mouseleave(handler);
+	}
 }
 
 
 
-function Page (background, squareMappings) {
+function Page (id, background, squareMappings) {
 	this.enabled = false;
 	this.mappings = squareMappings;
 
@@ -62,21 +70,33 @@ function Page (background, squareMappings) {
 	showingSquares = false;
 
 	// Disables itself and enables page
-	var handleClick = function (page) {
+	var handleEvent = function (event, page) {
 		return function () {
-			self.disable();
-			pages[self.mappings[page].page].enable();
+			if (self.enabled) {
+				self.disable();
+				pages[page].enable();
+				console.log(event + ' - ' + id + ' -> ' + page);
+			}
 		}
 	}
 
 	// Enables all squares and sets the background
 	this.enable = function () {
+		this.enabled = true;
+
 		for (var i = this.mappings.length - 1; i >= 0; i--) {
 			this.mappings[i].square.enable();
-			this.mappings[i].square.click(handleClick(i));
-		};
 
-		console.log('url("' + background + '")');
+			if (this.mappings[i].events.hasOwnProperty('click')) {
+				this.mappings[i].square.click(handleEvent('click', this.mappings[i].events.click));
+			}
+			if (this.mappings[i].events.hasOwnProperty('enter')) {
+				this.mappings[i].square.enter(handleEvent('enter', this.mappings[i].events.enter));
+			}
+			if (this.mappings[i].events.hasOwnProperty('leave')) {
+				this.mappings[i].square.leave(handleEvent('leave', this.mappings[i].events.leave));
+			}
+		};
 
 		$('#game').css({
 			background: 'url("' + background + '")'
@@ -85,12 +105,14 @@ function Page (background, squareMappings) {
 
 	// Disables all squares and sets a blank background
 	this.disable = function () {
+		this.enabled = false;
+
 		for (var i = this.mappings.length - 1; i >= 0; i--) {
 			this.mappings[i].square.disable();
 		};
 
 		$('#game').css({
-			background: '#FFE'
+			//background: '#FFE'
 		});
 	}
 
@@ -117,26 +139,44 @@ function showSquares () {
 	};
 }
 
-
 $(function() {
-	pages = [
-		new Page('pages/page0.png', [
-			{square: new Square(24, 238, 247, 148), page: 0 },
-			{square: new Square(321, 237, 247, 148), page: 1 },
-			{square: new Square(620, 238, 247, 148), page: 2 }
-			]),
-		new Page('pages/page1.png', [
-			{square: new Square(24, 238, 247, 148), page: 1 },
-			{square: new Square(321, 237, 247, 148), page: 2 },
-			{square: new Square(620, 238, 247, 148), page: 0 }
-			]),
-		new Page('pages/page2.png', [
-			{square: new Square(24, 238, 247, 148), page: 2 },
-			{square: new Square(321, 237, 247, 148), page: 0 },
-			{square: new Square(620, 238, 247, 148), page: 1 }
-			])
-	];
 
+	pages['main'] =	new Page('main', 'pages/page0.png', [
+		 {square: new Square(24, 238, 247, 148),
+			events: {enter: 'main-hilight'}},
+		 {square: new Square(321, 238, 247, 148),
+			events: {enter: 'main-hilight'}},
+		 {square: new Square(620, 238, 247, 148),
+			events: {enter: 'main-hilight'}},
+		]);
 
-	pages[0].enable();
+	pages['main-hilight'] =	new Page('main-hilight', 'pages/page1.png', [
+		 {square: new Square(24, 238, 247, 148),
+			events: {leave: 'main', click: 'tertiary'}},
+		 {square: new Square(321, 238, 247, 148),
+			events: {leave: 'main', click: 'tertiary'}},
+		 {square: new Square(620, 238, 247, 148),
+			events: {leave: 'main', click: 'tertiary'}},
+		]);
+
+	pages['tertiary'] =	new Page('tertiary', 'pages/page2.png', [
+		 {square: new Square(24, 238, 247, 148),
+			events: {enter: 'tertiary-hilight'}},
+		 {square: new Square(321, 238, 247, 148),
+			events: {enter: 'tertiary-hilight'}},
+		 {square: new Square(620, 238, 247, 148),
+			events: {enter: 'tertiary-hilight'}},
+		]);
+
+	pages['tertiary-hilight'] =	new Page('tertiary-hilight', 'pages/page1.png', [
+		 {square: new Square(24, 238, 247, 148),
+			events: {leave: 'tertiary', click: 'main'}},
+		 {square: new Square(321, 238, 247, 148),
+			events: {leave: 'tertiary', click: 'main'}},
+		 {square: new Square(620, 238, 247, 148),
+			events: {leave: 'tertiary', click: 'main'}},
+		]);
+
+	pages['main'].enable();
+	showSquares();
 });
