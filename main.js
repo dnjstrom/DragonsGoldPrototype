@@ -1,5 +1,16 @@
 // All pages in the game
 var pages = {};
+var images = 0;
+var loadedImages = 0;
+
+function start () {
+	if (loadedImages == images) {
+		console.log('Start!');
+
+		pages['main'].enable();
+		showSquares();
+	}
+}
 
 // A clickable square area
 function Square (x, y, dx, dy) {
@@ -24,7 +35,7 @@ function Square (x, y, dx, dy) {
 
 
 	this.enable = function () {
-		$('#game').append($box);
+		$('#container').append($box);
 	}
 
 	this.disable = function () {
@@ -62,9 +73,19 @@ function Square (x, y, dx, dy) {
 
 
 
-function Page (id, background, squareMappings) {
+function Page (id, imgPath, squareMappings) {
 	this.enabled = false;
 	this.mappings = squareMappings;
+	this.image = new Image();
+	this.image.onload = function () {
+		console.log('Loaded image: ' + imgPath);
+		loadedImages++;
+		start();
+	}
+	this.image.src = 'data:image/gif;base64,R0lGODlhCwALAIAAAAAA3pn/ZiH5BAEAAAEALAAAAAALAAsAAAIUhA+hkcuO4lmNVindo7qyrIXiGBYAOw==';	
+	//this.image.src = imgPath;
+	//this.image.src = 'http://lorempixel.com/g/900/650'
+	images++;
 
 	var self = this,
 	showingSquares = false;
@@ -98,9 +119,15 @@ function Page (id, background, squareMappings) {
 			}
 		};
 
-		$('#game').css({
-			background: 'url("' + background + '")'
-		});
+		this.paintBackground();
+	}
+
+	this.paintBackground = function () {
+		var ctx = document.getElementById('game').getContext('2d');	
+		ctx.fillStyle = "#FFE";
+		ctx.fillRect(0,0,900,650);
+		ctx.drawImage(this.image, 0, 0, 900, 650);
+		console.log('Drawing: ' + imgPath);
 	}
 
 	// Disables all squares and sets a blank background
@@ -110,10 +137,6 @@ function Page (id, background, squareMappings) {
 		for (var i = this.mappings.length - 1; i >= 0; i--) {
 			this.mappings[i].square.disable();
 		};
-
-		$('#game').css({
-			//background: '#FFE'
-		});
 	}
 
 	// Toggles the display of clickable areas
@@ -152,31 +175,28 @@ $(function() {
 
 	pages['main-hilight'] =	new Page('main-hilight', 'pages/page1.png', [
 		 {square: new Square(24, 238, 247, 148),
-			events: {leave: 'main', click: 'tertiary'}},
+			events: {leave: 'main', click: 'secondary'}},
 		 {square: new Square(321, 238, 247, 148),
-			events: {leave: 'main', click: 'tertiary'}},
+			events: {leave: 'main', click: 'secondary'}},
 		 {square: new Square(620, 238, 247, 148),
-			events: {leave: 'main', click: 'tertiary'}},
+			events: {leave: 'main', click: 'secondary'}},
 		]);
 
-	pages['tertiary'] =	new Page('tertiary', 'pages/page2.png', [
+	pages['secondary'] =	new Page('secondary', 'pages/page2.png', [
 		 {square: new Square(24, 238, 247, 148),
-			events: {enter: 'tertiary-hilight'}},
+			events: {enter: 'secondary-hilight'}},
 		 {square: new Square(321, 238, 247, 148),
-			events: {enter: 'tertiary-hilight'}},
+			events: {enter: 'secondary-hilight'}},
 		 {square: new Square(620, 238, 247, 148),
-			events: {enter: 'tertiary-hilight'}},
+			events: {enter: 'secondary-hilight'}},
 		]);
 
-	pages['tertiary-hilight'] =	new Page('tertiary-hilight', 'pages/page1.png', [
+	pages['secondary-hilight'] =	new Page('secondary-hilight', 'pages/page1.png', [
 		 {square: new Square(24, 238, 247, 148),
-			events: {leave: 'tertiary', click: 'main'}},
+			events: {leave: 'secondary', click: 'main'}},
 		 {square: new Square(321, 238, 247, 148),
-			events: {leave: 'tertiary', click: 'main'}},
+			events: {leave: 'secondary', click: 'main'}},
 		 {square: new Square(620, 238, 247, 148),
-			events: {leave: 'tertiary', click: 'main'}},
+			events: {leave: 'secondary', click: 'main'}},
 		]);
-
-	pages['main'].enable();
-	showSquares();
 });
